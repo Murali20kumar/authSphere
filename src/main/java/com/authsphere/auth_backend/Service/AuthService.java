@@ -82,7 +82,7 @@ public class AuthService {
 
             userRepository.save(user);
         }
-
+        
         return "Google login successful : " + email;
     }
 }
