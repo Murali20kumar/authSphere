@@ -1,6 +1,7 @@
 package com.authsphere.auth_backend.controller;
 
 import com.authsphere.auth_backend.Service.AuthService;
+import com.authsphere.auth_backend.dto.GoogleLoginRequest;
 import com.authsphere.auth_backend.dto.RegisterRequest;
 import com.authsphere.auth_backend.dto.LoginRequest;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,15 @@ public class AuthController {
 
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request){
         String response = authService.login(request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/google-login")  // for signing-in via Google
+
+    public ResponseEntity<?> googleLogin (@Valid @RequestBody GoogleLoginRequest request) throws Exception {
+
+       String response = authService.googleLogin(request.getIdToken());
 
         return ResponseEntity.ok(response);
     }

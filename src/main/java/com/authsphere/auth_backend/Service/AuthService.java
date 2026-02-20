@@ -56,9 +56,9 @@ public class AuthService {
 
     public String googleLogin(String idTokenString) throws Exception{
         GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
-                new NetHttpTransport(),
-                new GsonFactory())
-                .setAudience(Collections.singletonList("Your Google Client ID"))
+                new NetHttpTransport(), //to make HTTP requests i.e to fetch Google keys.
+                new GsonFactory()) // to parse JSON inside the token , i.e to decode the token.
+                .setAudience(Collections.singletonList("Your Google Client ID")) //If someone sends token generated for another app then verification fails.
                 .build();
 
         GoogleIdToken idToken = verifier.verify(idTokenString);
@@ -67,8 +67,22 @@ public class AuthService {
             throw new RuntimeException("Invalid Google token");
         }
 
+        GoogleIdToken.Payload payload = idToken.getPayload(); // payload contains email,name, GUser ID, expiry time
 
-        return "Google Login Successful";
+        String email = payload.getEmail();
+        String name = (String) payload.get("name");
 
+        User user = userRepository.findByEmail(email).orElse(null);
+
+        if(user == null){
+            user = new User();
+            user.setEmail(email);
+            user.setName(name);
+            user.setProvider("GOOGLE");
+
+            userRepository.save(user);
+        }
+
+        return "Google login successful : " + email;
     }
 }

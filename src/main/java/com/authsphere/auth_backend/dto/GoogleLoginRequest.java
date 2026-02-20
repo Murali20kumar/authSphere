@@ -7,7 +7,6 @@ public class GoogleLoginRequest {
     @NotBlank(message = "Token ID is required")
     private String idToken;
 
-
     public String getIdToken() {
         return idToken;
     }
