@@ -5,6 +5,7 @@ import com.authsphere.auth_backend.repository.UserRepository;
 import com.authsphere.auth_backend.dto.RegisterRequest;
 import com.authsphere.auth_backend.dto.LoginRequest;
 import com.authsphere.auth_backend.entity.User;
+import com.authsphere.auth_backend.security.JWTservice;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,10 +20,12 @@ import java.util.Collections;
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JWTservice jwTservice;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder){
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JWTservice jwTservice){
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwTservice = jwTservice;
     }
 
     public String register(RegisterRequest request){  //User register
@@ -51,7 +54,8 @@ public class AuthService {
             throw new RuntimeException("Invalid Password");
         }
 
-        return "Login Successful";
+        String token = jwTservice.generateToken(user.getEmail());
+        return token;
     }
 
     public String googleLogin(String idTokenString) throws Exception{
@@ -83,6 +87,7 @@ public class AuthService {
             userRepository.save(user);
         }
         
-        return "Google login successful : " + email;
+        String token = jwTservice.generateToken(email);
+        return token;
     }
 }

@@ -7,6 +7,7 @@ import com.authsphere.auth_backend.dto.LoginRequest;
 import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,6 +46,11 @@ public class AuthController {
        String response = authService.googleLogin(request.getIdToken());
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/api/test")
+    public String test() {
+        return "Protected endpoint";
     }
 
 }
