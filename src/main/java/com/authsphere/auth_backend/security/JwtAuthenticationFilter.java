@@ -27,9 +27,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter { // runs once
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+        System.out.println("Filter is running");
+
         String authHeader = request.getHeader("Authorization"); // get Authorization header
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) { // Bearer means : Whoever bears (holds) this token is authorized. it doesn't include email/password
             filterChain.doFilter(request, response);
             return;
         }
@@ -39,14 +41,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter { // runs once
         try {
             String email = jwtService.extractEmail(token); // Get the email from the given token via Payload
 
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    email,
-                    null,
-                    Collections.emptyList()
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken( //When a user logs in, this token is created to hold the raw username (principal) and password (credentials)
+                    email, // Object principal
+                    null,  //Object credentials (no need of pwd)
+                    Collections.emptyList() // Collection < ? extends GrantedAuthority> authorities ( no roles like admin / user)
             );
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            SecurityContextHolder.getContext().setAuthentication(authentication); // Once authenticated, the token is stored in the SecurityContextHolder, allowing the application to identify the current user across different requests
         } catch (Exception e) {
+            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); //401 Unauthorized and stops controlleer
             return;
         }

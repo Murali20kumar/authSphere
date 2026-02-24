@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController //This class handles HTTP requests and return JSON
-@RequestMapping("api/auth") // BASE URL : http://localhost:8080/api/auth
+@RequestMapping("/api/auth") // BASE URL : http://localhost:8080/api/auth
 
 public class AuthController {
     private final AuthService authService;
@@ -46,11 +46,7 @@ public class AuthController {
        String response = authService.googleLogin(request.getIdToken());
 
         return ResponseEntity.ok(response);
-    }
 
-    @GetMapping("/api/test")
-    public String test() {
-        return "Protected endpoint";
     }
 
 }

@@ -59,10 +59,10 @@ public class AuthService {
     }
 
     public String googleLogin(String idTokenString) throws Exception{
-        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
+        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder( //Decode JWT, Read header, download public keys, verify signatire, check expiry, check audience if matches my app
                 new NetHttpTransport(), //to make HTTP requests i.e to fetch Google keys.
                 new GsonFactory()) // to parse JSON inside the token , i.e to decode the token.
-                .setAudience(Collections.singletonList("Your Google Client ID")) //If someone sends token generated for another app then verification fails.
+                .setAudience(Collections.singletonList("551473793625-877iqqor90l9nbqvrhhm3mgtqb7s0joh.apps.googleusercontent.com")) //If someone sends token generated for another app then verification fails.
                 .build();
 
         GoogleIdToken idToken = verifier.verify(idTokenString);
@@ -86,6 +86,14 @@ public class AuthService {
 
             userRepository.save(user);
         }
+
+        GoogleIdToken.Payload payload1 = GoogleIdToken.parse(
+                new GsonFactory(),
+                idTokenString
+        ).getPayload();
+
+        System.out.println("AUD from token: " + payload1.getAudience());
+        System.out.println("ISS from token: " + payload1.getIssuer());
         
         String token = jwTservice.generateToken(email);
         return token;
