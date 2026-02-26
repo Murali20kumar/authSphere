@@ -1,6 +1,8 @@
 package com.authsphere.auth_backend.Service;
 
 import com.authsphere.auth_backend.dto.GoogleLoginRequest;
+import com.authsphere.auth_backend.entity.PasswordResetToken;
+import com.authsphere.auth_backend.repository.PasswordResetTokenRepository;
 import com.authsphere.auth_backend.repository.UserRepository;
 import com.authsphere.auth_backend.dto.RegisterRequest;
 import com.authsphere.auth_backend.dto.LoginRequest;
@@ -13,19 +15,26 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.UUID;
 
 @Service
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JWTservice jwTservice;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EmailService emailService;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JWTservice jwTservice){
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JWTservice jwTservice, PasswordResetTokenRepository passwordResetTokenRepository, EmailService emailService){
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwTservice = jwTservice;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.emailService = emailService;
     }
 
     public String register(RegisterRequest request){  //User register
@@ -97,5 +106,69 @@ public class AuthService {
         
         String token = jwTservice.generateToken(email);
         return token;
+    }
+
+
+    //Forgot password method
+    @Transactional
+    public  String forgotPassword(String email){
+
+        User user = userRepository.findByEmail(email).orElse(null);
+
+        if(user == null){
+            return "If the mail exists, a reset link has been sent";
+        }
+
+        if("GOOGLE".equals(user.getProvider())){
+            //throw new RuntimeException("Password reset is not for Google Login");
+            String s = "Password reset is not for Google Login";
+            return s;
+        }
+
+        String result = "";
+
+        if(user != null){
+
+            passwordResetTokenRepository.deleteByUserId(user.getId()); // to delete old saved tokens
+
+            String token = UUID.randomUUID().toString();  //Generate random token , java.lang.Object
+            //java.util.UUID , A class that represents an immutable universally unique identifier (UUID). A UUID represents a 128-bit value
+
+            PasswordResetToken resetToken = new PasswordResetToken();
+            resetToken.setToken(token);
+            resetToken.setUser(user);
+
+            resetToken.setExpiryTime(LocalDateTime.now().plusMinutes(15)); // now token is valid for 15 mins
+
+            passwordResetTokenRepository.save(resetToken);
+
+            System.out.println("Reset Token :" + token);
+
+            result = token; // In real time we send link to mail or OTP via mail or SMS
+
+            emailService.sendPasswordResetEmail(user.getEmail(), token);
+        }
+
+
+        return result ;
+    }
+
+    //To Reset-Password
+
+    @Transactional
+    public String resetPassword (String token, String newPassword){
+
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token).orElseThrow(()-> new RuntimeException("Invalid token"));
+
+        if(resetToken.getExpiryTime().isBefore(LocalDateTime.now()))   throw new RuntimeException("Reset token expired");
+
+        User user = resetToken.getUser();
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        passwordResetTokenRepository.delete(resetToken);
+
+        return "Reset password successfully";
     }
 }

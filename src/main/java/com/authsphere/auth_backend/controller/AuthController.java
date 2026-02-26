@@ -1,9 +1,7 @@
 package com.authsphere.auth_backend.controller;
 
 import com.authsphere.auth_backend.Service.AuthService;
-import com.authsphere.auth_backend.dto.GoogleLoginRequest;
-import com.authsphere.auth_backend.dto.RegisterRequest;
-import com.authsphere.auth_backend.dto.LoginRequest;
+import com.authsphere.auth_backend.dto.*;
 import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,6 +45,23 @@ public class AuthController {
 
         return ResponseEntity.ok(response);
 
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request){
+        String response = authService.forgotPassword(request.getEmail());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request){
+      String response = authService.resetPassword(
+              request.getToken(),
+              request.getNewPassword()
+      );
+
+      return ResponseEntity.ok(response);
+      
     }
 
 }

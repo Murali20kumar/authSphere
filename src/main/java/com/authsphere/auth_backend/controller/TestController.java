@@ -11,3 +11,4 @@ public class TestController {   // for testing with /api/auth/protected url
         return "Protected endpoint returning";
     }
 }
+// This is for testing purpose only on Google signin
